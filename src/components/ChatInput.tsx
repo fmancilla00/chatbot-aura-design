@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
@@ -9,29 +8,32 @@ type ChatInputProps = {
 };
 
 const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage }) => {
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (message.trim()) {
       onSendMessage(message);
-      setMessage('');
+      setMessage("");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 border-t p-2 bg-background">
+    <form
+      onSubmit={handleSubmit}
+      className="flex gap-2 border-t p-2 bg-background"
+    >
       <Input
         placeholder="Escribe un mensaje..."
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         className="flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 border-0 shadow-none"
       />
-      <Button 
-        type="submit" 
-        size="icon" 
+      <Button
+        type="submit"
+        size="icon"
         disabled={!message.trim()}
-        className="bg-purple-500 hover:bg-purple-600"
+        variant="default"
       >
         <Send className="h-4 w-4" />
       </Button>
