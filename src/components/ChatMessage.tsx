@@ -15,12 +15,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ content, isUser, timestamp })
     <div
       className={cn(
         "flex gap-3 max-w-[80%] animate-fade-in mb-4",
-        isUser ? "ml-auto" : "mr-auto"
+        isUser ? "ml-auto flex-row-reverse" : "mr-auto"
       )}
     >
-      {!isUser && (
+      {!isUser ? (
         <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
           <MessageSquare className="h-4 w-4" />
+        </Avatar>
+      ) : (
+        <Avatar className="h-8 w-8 bg-purple-500 text-white">
+          <User className="h-4 w-4" />
         </Avatar>
       )}
 
@@ -28,8 +32,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ content, isUser, timestamp })
         className={cn(
           "rounded-2xl p-4",
           isUser
-            ? "bg-chat-user text-white"
-            : "bg-chat-assistant text-gray-800"
+            ? "bg-purple-500 text-white"
+            : "bg-gray-100 text-gray-800"
         )}
       >
         <p className="whitespace-pre-wrap break-words">{content}</p>
@@ -39,12 +43,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ content, isUser, timestamp })
           </p>
         )}
       </div>
-
-      {isUser && (
-        <Avatar className="h-8 w-8 bg-chat-user text-white">
-          <User className="h-4 w-4" />
-        </Avatar>
-      )}
     </div>
   );
 };
