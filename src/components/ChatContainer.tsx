@@ -14,8 +14,14 @@ type ChatContainerProps = {
   chatId?: string;
 };
 
+const accionEnCurso = {
+  DB: <div>Accediendo a BD</div>,
+  AF: <div>Analisis financiero</div>,
+};
+
 const ChatContainer: React.FC<ChatContainerProps> = ({ chatId }) => {
   const [messages, setMessages] = useState<MessageDto[]>([]);
+  const [status, setStatus] = useState("");
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -42,8 +48,6 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ chatId }) => {
 
   const { data, error, isLoading, sendMessage } = useChatStream();
 
-  console.log(data);
-
   useEffect(() => {
     if (!isLoading && data.length > 0) {
       const responseText = data[data.length - 2].payload;
@@ -51,10 +55,17 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ chatId }) => {
         content: responseText,
         type: "ai",
       };
+      setStatus(null);
       setMessages((prev) => [...prev, response]);
     }
+    if (isLoading && data.length > 0) {
+      const { type, payload } = data[data.length - 1];
+      if (type == "adv") {
+        setStatus(payload);
+      }
+    }
   }, [isLoading, data]);
-  // ! fin chanchada
+
   const handleSendMessage = (content: string) => {
     const newMessage: MessageDto = {
       content,
@@ -83,6 +94,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ chatId }) => {
               isUser={message.type == "human"}
             />
           ))}
+          <div>{status && accionEnCurso[status]}</div>
         </div>
       </ScrollArea>
       <ChatInput onSendMessage={handleSendMessage} />
