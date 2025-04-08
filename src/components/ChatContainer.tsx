@@ -1,79 +1,86 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
-import ChatMessage from './ChatMessage';
-import ChatInput from './ChatInput';
-
-// Define message type
-type Message = {
-  id: string;
-  content: string;
-  isUser: boolean;
-  timestamp: string;
-};
+import ChatMessage from "./ChatMessage";
+import ChatInput from "./ChatInput";
+import logoEcogas from "../assets/nuevo_logo_ecogas.svg";
+import { username } from "@/layout/ChatLayout";
+import { HistoryService, MessageDto } from "@/services/history";
+import { queryOptions, useQuery } from "@tanstack/react-query";
+import { ChatService } from "@/services/chat";
+import { PromptRequest, useChatStream } from "@/hooks/use-message-stream";
 
 type ChatContainerProps = {
   chatId?: string;
 };
 
 const ChatContainer: React.FC<ChatContainerProps> = ({ chatId }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      content: '¡Hola! ¿En qué puedo ayudarte hoy?',
-      isUser: false,
-      timestamp: '12:01'
-    }
-  ]);
+  const [messages, setMessages] = useState<MessageDto[]>([]);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom whenever messages change
+  const { data: messagesData } = useQuery({
+    queryKey: [username, chatId],
+    queryFn: () => HistoryService.getById(chatId),
+  });
+  useEffect(() => {
+    if (messagesData) {
+      setMessages(messagesData);
+    }
+  }, [messagesData]);
+
   useEffect(() => {
     if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      const scrollContainer = scrollAreaRef.current.querySelector(
+        "[data-radix-scroll-area-viewport]"
+      );
       if (scrollContainer) {
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       }
     }
   }, [messages]);
 
-  const handleSendMessage = (content: string) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      content,
-      isUser: true,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    
-    setMessages(prev => [...prev, newMessage]);
-    
-    // Simulate assistant response
-    setTimeout(() => {
-      const response: Message = {
-        id: (Date.now() + 1).toString(),
-        content: "Esta es una respuesta automática de ejemplo. En una implementación real, aquí podría integrarse una API externa o un modelo de lenguaje.",
-        isUser: false,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const { data, error, isLoading, sendMessage } = useChatStream();
+
+  console.log(data);
+
+  useEffect(() => {
+    if (!isLoading && data.length > 0) {
+      const responseText = data[data.length - 2].payload;
+      const response: MessageDto = {
+        content: responseText,
+        type: "ai",
       };
-      setMessages(prev => [...prev, response]);
-    }, 1000);
+      setMessages((prev) => [...prev, response]);
+    }
+  }, [isLoading, data]);
+  // ! fin chanchada
+  const handleSendMessage = (content: string) => {
+    const newMessage: MessageDto = {
+      content,
+      type: "human",
+    };
+
+    setMessages((prev) => [...prev, newMessage]);
+
+    // Todo: Peticion
+    const body: PromptRequest = {
+      prompt: content,
+      username: username,
+      conversation_id: chatId,
+    };
+    sendMessage(body);
   };
 
   return (
     <Card className="flex flex-col h-full rounded-none border-0 shadow-none">
-      <div className="p-4 border-b">
-        <h2 className="font-semibold">Chat Actual</h2>
-      </div>
       <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
         <div className="space-y-4">
-          {messages.map(message => (
+          {messages.map((message) => (
             <ChatMessage
-              key={message.id}
+              key={`${chatId}-${Date.now()}-${Math.random()}`}
               content={message.content}
-              isUser={message.isUser}
-              timestamp={message.timestamp}
+              isUser={message.type == "human"}
             />
           ))}
         </div>
